@@ -8,19 +8,22 @@ let cityZoom = 11;
 let overviewZoom = 6;
 var mainMap;
 
+// Create all reseller DIVs
+
+
 // DOM variables
 let resellersParentDiv = document.querySelector('.resellers');
-let resellerDivs = document.querySelectorAll('.reseller');
+let resellerDivs;
 const searchBar = document.querySelector('#search-city');
 const autoCompletionList = document.querySelector('.city-list-autocomplete');
-
-
 
 
 // Global storage of all the resellers.
 let resellersGlobal = [];
 fetchResellers().then((data) => {resellersGlobal= data})
 
+
+createAndAddResellerDivs();
 
 /**
  * Initlize the Google Map with settings and markers. 
@@ -31,7 +34,6 @@ fetchResellers().then((data) => {resellersGlobal= data})
  * Todo: Display error message on failed fetch.
 */
 async function initMap() {
-  console.log('InitMap Called....');
   // Get the coordinates from the resellers, fetched from  'lists.aterforsaljre.lat_lng'.
   let resellerCoordinates = await fetchResellersCoordinates();
   
@@ -77,7 +79,7 @@ async function initMap() {
   });
     
   // Enable all the 'Reseller' divs click functionality.
-  makeResellerDivsClickableOnMap(map)
+  makeResellerDivsClickableOnMap(map);
 }
 
 //-------------------------------------------
@@ -199,7 +201,8 @@ async function makeResellerDivsClickableOnMap(map){
   let currentLocation = null;
   
   [...resellerDivs].forEach((resellerDiv)=> {
-    resellerDiv.addEventListener('click', (event)=> {
+      resellerDiv.addEventListener('click', ()=> {
+      
       // Get reseller information
       const resellerName = resellerDiv.querySelector('#reseller-name').querySelector('b').innerHTML;
       const resellerAddress = resellerDiv.querySelector('#reseller-address').innerHTML;
@@ -383,3 +386,87 @@ function removeListElements() {
 searchBar.addEventListener('input', autoCompleteCities);
 
 
+//-------------------------------------------
+// HTML FACTORY
+//-------------------------------------------
+
+/**
+ * Creates and displays all the reseller in alphabetical order.
+ * 
+ */
+async function createAndAddResellerDivs(){
+  const resellers = await fetchResellers();
+  let sortedResellers = resellers.sort(compareCitiesByName);
+  const pinVector = "https://s3-eu-west-1.amazonaws.com/static.wm3.se/sites/995/template_assets/Vector.png";
+  
+  [...sortedResellers].forEach((reseller) => {
+
+    // Create the main HTML elements for the Reseller
+    let resellerDiv = document.createElement('div');
+    let pin = document.createElement('div');
+    let pinImg = document.createElement('img');
+    let resellerInfo = document.createElement('div');
+
+    // Add class names to DIVs
+    resellerDiv.classList.add('reseller');
+    pin.classList.add('pin');
+    resellerInfo.classList.add('reseller-info');
+
+    // Set pin image
+    pinImg.src = pinVector;
+
+    // Create all <p> tags for the ResellerInfo div 
+    let resellerName = document.createElement('p');
+    let resellerAddress = document.createElement('p');
+    let resellerCity = document.createElement('p');
+    let resellerPhone = document.createElement('p');
+    let resellerMail = document.createElement('p');
+    let resellerWebsite = document.createElement('p');
+
+    // Add values to <p>  tags
+    resellerName.innerHTML = "<b>" + reseller.namn + "</b>";
+    resellerAddress.innerHTML = reseller.adress;
+    resellerCity.innerHTML = reseller.stad;
+    resellerPhone.innerHTML = reseller.telefon;
+    resellerMail.innerHTML = reseller.email;
+    resellerWebsite.innerHTML = reseller.website;
+
+    // Add ID's to <p> tags
+    resellerName.id = "reseller-name";
+    resellerAddress.id = "reseller-address";
+    resellerCity.id = "reseller-city";
+
+    // Append child nodes to parents
+    resellerInfo.append(resellerName, 
+      resellerAddress, 
+      resellerCity, 
+      resellerPhone, 
+      resellerMail, 
+      resellerWebsite);
+
+    pin.append(pinImg);
+    resellerDiv.append(pin, resellerInfo);
+    resellersParentDiv.appendChild(resellerDiv);
+
+  });
+
+  resellerDivs = document.querySelectorAll('.reseller');
+}
+
+
+/**
+ * Compare object based on the value of the 'stad' property on each reseller. Used to sort reseller in alphabetical order. 
+ * @param {Object} a 
+ * @param {Object} b 
+ * @returns an integer used for the sort function.
+ */
+function compareCitiesByName(a, b){
+  if(a.stad < b.stad){
+    return -1
+  }
+  if (a.stad > b.stad) {
+    return 1
+  }
+  return 0
+
+}
