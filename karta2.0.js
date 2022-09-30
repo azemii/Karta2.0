@@ -105,7 +105,6 @@ function smoothZoomIn (map, max, current) {
           map.setZoom(current);
           
         }, 80);
-
     }
 }
 
@@ -165,8 +164,7 @@ async function fetchResellersCoordinates (){
 async function fetchResellers (){
 /*
 * --- NOTES ---
-* 1. The current specified list is 'aterforsaljare'
-* 2. The value name of the coordinates variable is 'lat_lng'
+*  The current specified list is 'aterforsaljare'
 */
 
   // If previously fetched, return the previously saved data, use resellersGlobal != null
@@ -254,7 +252,6 @@ async function makeResellerDivsClickableOnMap(map){
  * all the 'Reseller' divs which city does not match the cityFilter. 
  */
 function createResellerHTMLElementsWithCity(cityFilter) {
-  console.log('Showing resellers at: ' + cityFilter);
   [...resellerDivs].forEach((resellerDiv)=> {
     let resellerCity = resellerDiv.querySelector('#reseller-city');
     
@@ -292,7 +289,9 @@ async function autoCompleteCities() {
   createResellerHTMLElementsWithCity()
   
   for (let index in resellersGlobal) {
-    cities.push(resellersGlobal[index].stad);
+    if (!cities.includes(resellersGlobal[index].stad)){
+      cities.push(resellersGlobal[index].stad);
+    }
   }
   
   let sortedCities = cities.sort();
@@ -301,7 +300,7 @@ async function autoCompleteCities() {
   removeListElements();
   
   for (let city in sortedCities) {
-    // If avaiable any available cities start with the input search term.
+    // Check if any city starts with the input search-text
     if (sortedCities[city].toLowerCase().startsWith(inputForm.value.toLowerCase()) && inputForm.value !== ""){
       
       // Create the list elements for the auto completion
@@ -339,12 +338,11 @@ async function autoCompleteCities() {
  * @param {String} city The name of the city
  */
 async function zoomInOnCity(city) {
-  console.log('zoomincity called');
   let cityResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${city}+sweden&sensor=true&key=AIzaSyBWbOWnTwyC7GU349bPAwBR2v-InO6sebc`)
-  .catch(error => console.log('There was an error fetching the city coordinates from Google: '  + error));
+  .catch(error => console.error('There was an error fetching the city coordinates from Google: '  + error));
 
   let cityResponseJson = await cityResponse.json()
-  .catch(error => console.log('There was an error converting the response object from Google for the city:' + city + ' Error: ' + error));
+  .catch(error => console.error('There was an error converting the response object from Google for the city:' + city + ' Error: ' + error));
   let cityLng = cityResponseJson.results[0].geometry.location.lng
   let cityLat = cityResponseJson.results[0].geometry.location.lat
 
@@ -360,13 +358,10 @@ async function zoomInOnCity(city) {
       smoothZoomIn(mainMap, cityZoom, mainMap.getZoom())
     }, 2000);
   }else {
-    console.log('Current zoom NOT greater than cityZoom'  +"Current: " + mainMap.getZoom() + 'city: ' + cityZoom);
     mainMap.setCenter(cityCoordinates);
     mainMap.panTo(cityCoordinates);
     smoothZoomIn(mainMap, cityZoom, mainMap.getZoom())
   }
-  
-  console.log("Longi: "+cityLng + "- Lat: " + cityLat);
 }
 
 
