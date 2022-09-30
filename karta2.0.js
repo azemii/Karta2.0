@@ -450,6 +450,7 @@ async function createAndAddResellerDivs(){
 
   });
 
+  // Set the global variable 
   resellerDivs = document.querySelectorAll('.reseller');
 }
 
